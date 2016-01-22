@@ -28,11 +28,7 @@ def chunks(l, n):
 
 
 def add_indico_text_tags(chunk):
-    article_texts = [article['content'] for article in chunk]
-    text_tags_dicts = indicoio.text_tags(article_texts, threshold=0.1)
-    for i in range(len(chunk)):
-        text_tag_dict = text_tags_dicts[i]
-        chunk[i]['text_tags'] = text_tag_dict.items()
+    """ TODO: add a list of representative text tags to each article in the chunk """
     return chunk
 
 
@@ -51,21 +47,17 @@ def augment_data():
 
 def score_by_tag_match(article, interests):
     score = 0
-    for article_tag in article['text_tags']:
-        for interest_tag in interests:
-            if article_tag[0] == interest_tag[0]:
-                score += article_tag[1] * interest_tag[1]
+    """ TODO: score an article by how well it matches the a set of interests """
     return score
 
 
-def get_tags(text):
-    tag_dict = indicoio.text_tags(text)
-    sorted_tags = sorted(tag_dict.items(), key=lambda tup: -tup[1])[:5]
-    return sorted_tags
+def get_user_interests(statement):
+    """ TODO: return a list of user interests based on a statement that they have made. """
+    return []
 
 
 def recommend(user_statement):
-    interests = get_tags(user_statement)
+    interests = get_user_interests(user_statement)
     data = load_data('indicoed_articles.ndjson')[0]
     sorted_by_score = sorted(data, key=lambda x: score_by_tag_match(x, interests), reverse=True)
     del sorted_by_score[10:]
@@ -80,3 +72,5 @@ def run():
     recommended_articles = recommend("I wish I was a painter")
     recommended_titles = [article['title'] for article in recommended_articles]
     print recommended_titles
+
+run()
