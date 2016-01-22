@@ -58,14 +58,14 @@ def score_by_tag_match(article, interests):
     return score
 
 
-def get_tags(text):
-    tag_dict = indicoio.text_tags(text)
+def get_user_interests(statement):
+    tag_dict = indicoio.text_tags(statement)
     sorted_tags = sorted(tag_dict.items(), key=lambda tup: -tup[1])[:5]
     return sorted_tags
 
 
 def recommend(user_statement):
-    interests = get_tags(user_statement)
+    interests = get_user_interests(user_statement)
     data = load_data('indicoed_articles.ndjson')[0]
     sorted_by_score = sorted(data, key=lambda x: score_by_tag_match(x, interests), reverse=True)
     del sorted_by_score[10:]
