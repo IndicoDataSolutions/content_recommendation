@@ -1,6 +1,5 @@
 import json
 import indicoio
-import operator
 
 indicoio.config.api_key = '0955c59916d6cd98d8ddbcbd7aeacd65'
 
@@ -8,11 +7,13 @@ indicoio.config.api_key = '0955c59916d6cd98d8ddbcbd7aeacd65'
 
 
 def load_data(filename):
+    """loads JSON data from a file"""
     with open(filename, 'rb') as f:
         return [json.loads(l) for l in f]
 
 
 def dump_data(filename, data):
+    """dumps  JSON data to a file"""
     with open(filename, 'wb') as outfile:
         json.dump(data, outfile)
 
@@ -23,22 +24,29 @@ def chunks(l, n):
         yield l[i:i+n]
 
 
+""" Task 1: Augment Articles with Text Tags to identify Topics """
 
-def indico_data(data):
-    data = load_data('/Users/diana/articles.ndjson')
+
+def add_indico_text_tags(chunk):
+    article_texts = [article['content'] for article in chunk]
+    text_tags_dicts = indicoio.text_tags(article_texts, threshold=0.1)
+    for i in range(len(chunk)):
+        text_tag_dict = text_tags_dicts[i]
+        chunk[i]['text_tags'] = text_tag_dict.items()
+    return chunk
+
+
+def augment_data():
+    data = load_data('articles.ndjson')[0]
+
     for chunk in chunks(data, 100):
-        article_texts = [article['content'] for article in chunk]
-        sentiment = indicoio.sentiment(article_texts, top_n=1)
-        text_tags = [sorted(d.items(), key=operator.itemgetter(1)) for d in indicoio.text_tags(article_texts, top_n=5)]
-        political = [sorted(d.keys(), key=operator.itemgetter(1)) for d in indicoio.political(article_texts, top_n=3)]
-        for i in range(len(chunk)):
-            article = chunk[i]
-            article['sentiment'] = sentiment[i]
-            article['text_tags'] = text_tags[i]
-            article['political'] = political[i]
+        add_indico_text_tags(chunk)
 
     with open('indicoed_articles.ndjson', 'wb') as outfile:
         json.dump(data, outfile)
+
+
+""" Task 2: Choose articles to show a user based on a statement """
 
 
 def score_by_tag_match(article, interests):
@@ -50,28 +58,25 @@ def score_by_tag_match(article, interests):
     return score
 
 
-def choose_articles(interests):
-    data = load_data('indicoed_articles.ndjson')[0]
-    sorted_by_score = sorted(data, key=lambda x: score_by_tag_match(x, interests), reverse=True)
-    del sorted_by_score[10:]
-    return sorted_by_score
-
-
 def get_tags(text):
     tag_dict = indicoio.text_tags(text)
     sorted_tags = sorted(tag_dict.items(), key=lambda tup: -tup[1])[:5]
     return sorted_tags
 
 
-def recommend():
-    tags = get_tags("I wish I was a painter")
-    articles = choose_articles(tags)
-    titles = map(lambda x: x['title'], articles)
-    print titles
-    return articles
-
-recommend()
+def recommend(user_statement):
+    interests = get_tags(user_statement)
+    data = load_data('indicoed_articles.ndjson')[0]
+    sorted_by_score = sorted(data, key=lambda x: score_by_tag_match(x, interests), reverse=True)
+    del sorted_by_score[10:]
+    return sorted_by_score
 
 
-# data = load_data('/Users/diana/medium_top_10k_hearts.ndjson')
-# indico_data(data)
+""" Try it out! """
+
+
+def run():
+    augment_data()
+    recommended_articles = recommend("I wish I was a painter")
+    recommended_titles = [article['title'] for article in recommended_articles]
+    print recommended_titles
