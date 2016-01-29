@@ -18,8 +18,8 @@ def dump_data(filename, data):
         json.dump(data, outfile)
 
 
-def chunks(l, n):
-    """Yield successive n-sized chunks from l."""
+def batches(l, n):
+    """Yield successive n-sized batches from l."""
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
@@ -27,16 +27,16 @@ def chunks(l, n):
 """ Task 1: Augment Articles with Text Tags to identify Topics """
 
 
-def add_indico_text_tags(chunk):
-    """ TODO: add a list of representative text tags to each article in the chunk """
-    return chunk
+def add_indico_text_tags(batch):
+    """ TODO: add a list of representative text tags to each article in the batch """
+    return batch
 
 
 def augment_data():
     data = load_data('articles.ndjson')[0]
 
-    for chunk in chunks(data, 100):
-        add_indico_text_tags(chunk)
+    for batch in batches(data, 100):
+        add_indico_text_tags(batch)
 
     with open('indicoed_articles.ndjson', 'wb') as outfile:
         json.dump(data, outfile)
