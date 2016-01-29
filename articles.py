@@ -18,8 +18,8 @@ def dump_data(filename, data):
         json.dump(data, outfile)
 
 
-def chunks(l, n):
-    """Yield successive n-sized chunks from l."""
+def batches(l, n):
+    """Yield successive n-sized batches from l."""
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
@@ -27,20 +27,20 @@ def chunks(l, n):
 """ Task 1: Augment Articles with Text Tags to identify Topics """
 
 
-def add_indico_text_tags(chunk):
-    article_texts = [article['content'] for article in chunk]
+def add_indico_text_tags(batch):
+    article_texts = [article['content'] for article in batch]
     text_tags_dicts = indicoio.text_tags(article_texts, threshold=0.1)
-    for i in range(len(chunk)):
+    for i in range(len(batch)):
         text_tag_dict = text_tags_dicts[i]
-        chunk[i]['text_tags'] = text_tag_dict.items()
-    return chunk
+        batch[i]['text_tags'] = text_tag_dict.items()
+    return batch
 
 
 def augment_data():
     data = load_data('articles.ndjson')[0]
 
-    for chunk in chunks(data, 100):
-        add_indico_text_tags(chunk)
+    for batch in batches(data, 100):
+        add_indico_text_tags(batch)
 
     with open('indicoed_articles.ndjson', 'wb') as outfile:
         json.dump(data, outfile)
@@ -77,6 +77,8 @@ def recommend(user_statement):
 
 def run():
     augment_data()
-    recommended_articles = recommend("I wish I was a painter")
+    recommended_articles = recommend("No one is an artist unless he carries his picture in his head before painting it, and is sure of his method and composition.")
     recommended_titles = [article['title'] for article in recommended_articles]
     print recommended_titles
+
+run()
