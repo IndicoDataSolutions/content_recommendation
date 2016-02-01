@@ -59,8 +59,8 @@ def score_by_tag_match(article, interests):
 
 
 def get_user_interests(statement):
-    tag_dict = indicoio.text_tags(statement)
-    sorted_tags = sorted(tag_dict.items(), key=lambda tup: -tup[1])[:5]
+    tag_dict = indicoio.text_tags(statement, top_n=5)
+    sorted_tags = sorted(tag_dict.items(), key=lambda tup: -tup[1])
     return sorted_tags
 
 
